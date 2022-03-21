@@ -1,0 +1,5 @@
+#define SSID_name ""
+#define SSID_pass ""
+
+#define fingerprint_buf "ABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD"
+#define HTTPS_URL "https://google.com/"
