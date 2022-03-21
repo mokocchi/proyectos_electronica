@@ -3,5 +3,7 @@ Incluye Arduino , NodeMCU y BluePill
 
 
 ## Lista:
-- nodemcu_connect_wifi: conectar NodeMCU (ESP-12E) al wifi
+### ESP8266
+- nodemcu_connect_wifi: conectarse al wifi
 - nodemcu_wifi_https: GET a un servidor HTTPS con certificado hardcodeado
+- button_test: prender un led con un botón
