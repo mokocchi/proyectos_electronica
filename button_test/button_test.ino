@@ -1,5 +1,5 @@
-int ledpin = D1;
-int button = D2; //nota: el D3 está siempre HIGH y no sirve para el botón
+int button = D1;
+int ledpin = D2;
 int buttonState = 0;
 void setup() {  
   Serial.begin(9600);
