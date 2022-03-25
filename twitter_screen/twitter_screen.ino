@@ -111,12 +111,11 @@ void loop()
   }
   else
   {
-    // analogWrite(RED_RGB, 0);
+    show_asterisk(ST77XX_RED, true);
   }
   if (connected)
   {
-    // analogWrite(GREEN_RGB, 0);
-    // analogWrite(RED_RGB, 0);
+    show_asterisk(ST77XX_YELLOW, false);
     int httpCode = https.GET();
     if (httpCode > 0)
     {
@@ -153,18 +152,13 @@ void loop()
         Serial.println(payload);
         https.end();
         connected = false;
-        // analogWrite(RED_RGB, 0);
-        // delay(600);
-        // analogWrite(RED_RGB, 255);
+        show_asterisk(ST77XX_RED, false);
       }
     }
     else
     {
-      // connection error
-      //  analogWrite(RED_RGB, 0);
+      show_asterisk(ST77XX_RED, true);
     }
-    // analogWrite(RED_RGB, 255);
-    // analogWrite(GREEN_RGB, 0);
     int max = 6;
     for (int i = 0; i < max; i++)
     {
@@ -173,15 +167,11 @@ void loop()
       {
         tweet_screensaver();
       }
-      // analogWrite(GREEN_RGB, 255);
-      // delay(200);
-      // analogWrite(GREEN_RGB, 0);
     }
-    // analogWrite(GREEN_RGB, 255);
   }
   else
   {
     delay(500);
-    // analogWrite(RED_RGB, 255);
+    show_asterisk(ST77XX_RED, true);
   }
 }
