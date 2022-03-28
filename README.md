@@ -8,4 +8,8 @@ Incluye Arduino , NodeMCU y BluePill
 - nodemcu_wifi_https: GET a un servidor HTTPS con certificado hardcodeado
 - button_test: prender un led con un botón
 - twitter_led: prender un led RGB cuando hay un tweet nuevo del usuario X (con estado en 3 leds de colores)
-- twitter_monoled: íden twitter_led, pero los estados se muestran en el led RGB
+- twitter_monoled: ídem twitter_led, pero los estados se muestran en el led RGB
+- Photoresistor: captar pulsos de luz en código morse usando un fotorresistor
+
+### Arduino
+- Photoresistor
