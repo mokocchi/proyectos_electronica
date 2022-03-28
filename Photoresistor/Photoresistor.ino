@@ -1,81 +1,73 @@
-const int sensorPin = 0;
-const int ledPin = 9;
+const int pin_sensor = A0;
 
-int lightLevel;
-int calibratedlightLevel;
-int maxThreshold = 0;
-int minThreshold = 1023;
-int envLight = 0;
+int umbral_minimo = 0;
+int umbral_maximo = 1023;
+int luz_ambiente = 0;
+int duracion_parpadeo = 100;
+int tolerancia_parpadeo = 150;
+String punto = ".";
+String raya = "-";
+String palabra = "";
 
-void setEnvLight() {
-  lightLevel = analogRead(sensorPin);
-  envLight = map(lightLevel, 0, 1023, 0, 255);
+void fijar_luz_ambiente() {
+  int luz_sensor = analogRead(pin_sensor);
+  luz_ambiente = map(luz_sensor, 0, 1023, 0, 255);
 }
 
-void setup() {
-  pinMode(ledPin, OUTPUT);
-  Serial.begin(9600);
-  delay(1000);
-  setEnvLight();
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(500);
-  digitalWrite(LED_BUILTIN, LOW);
-  char buffer[16];
-  sprintf(buffer, "Env light: %d", envLight);
-  Serial.println(buffer);
-  Serial.print("Esperando...");
+bool esperar_luz(int inicio_oscuridad, boolean por_siempre) {
+  int luz_calibrada = 0;
+  do {
+    int luz_sensor = analogRead(pin_sensor);
+    luz_calibrada = map(luz_sensor, 0, 1023, 0, 255);
+  } while ((luz_calibrada <= luz_ambiente + 10) && (por_siempre || (millis() - inicio_oscuridad < duracion_parpadeo * 7)));
+  return luz_calibrada <= luz_ambiente + 10; //se acabo el tiempo
 }
 
-String myword = "";
+void esperar_oscuridad() {
+  int luz_calibrada = 0;
+  do {
+    int luz_sensor = analogRead(pin_sensor);
+    luz_calibrada = map(luz_sensor, 0, 1023, 0, 255);    
+  } while (luz_calibrada > luz_ambiente);
+}
 
-int catch_flash() {
-  int start = millis();
-  int mylenght = 0;
-  while (true) {
-    lightLevel = analogRead(sensorPin);
-    calibratedlightLevel = map(lightLevel, 0, 1023, 0, 255);
-    if (calibratedlightLevel <= envLight) {
-      mylenght = millis() - start;
-      break;
-    }
-  }
-  Serial.println(mylenght);
-  if ((mylenght > 0) && (mylenght < 350)) {
-    Serial.println("PUNTO");
-    myword = myword + ".";
+void leer_luz() {
+  // Serial.println("LUZ");
+  int duracion_luz = 0;
+  int luz_calibrada = 0;
+  int inicio_luz = millis();
+  do {
+    int luz_sensor = analogRead(pin_sensor);
+    luz_calibrada = map(luz_sensor, 0, 1023, 0, 255);
+  } while (luz_calibrada > luz_ambiente);
+  duracion_luz = millis() - inicio_luz;
+  if (duracion_luz < duracion_parpadeo + tolerancia_parpadeo) {
+    palabra = palabra + punto;
   } else {
-    Serial.println("RAYA");
-    myword = myword + "-";
+    palabra = palabra + raya;
   }
   Serial.print(".");
 }
 
+void setup() {
+  Serial.begin(9600);
+  delay(1000);
+  fijar_luz_ambiente();
+  char buffer[16];
+  sprintf(buffer, "Luz ambiente: %d", luz_ambiente);
+  Serial.println(buffer);
+  Serial.print("Esperando...");
+}
+
 void loop() {
-  do {
-    lightLevel = analogRead(sensorPin);
-    calibratedlightLevel = map(lightLevel, 0, 1023, 0, 255);
-  } while (calibratedlightLevel <= envLight);
-  analogWrite(LED_BUILTIN, calibratedlightLevel);
-  do {
-    catch_flash();
-  } while (calibratedlightLevel > envLight);
-  analogWrite(LED_BUILTIN, 0);
-  Serial.write("Calculando silencio");
-  int start = millis();
-  do {
-    lightLevel = analogRead(sensorPin);
-    calibratedlightLevel = map(lightLevel, 0, 1023, 0, 255);
-    Serial.print(".");
-  } while (calibratedlightLevel <= envLight);
-  int mylenght2 = millis() - start;
-  if (mylenght2 > 800) {
-    Serial.println(mylenght2);
+  esperar_luz(0, true);
+  leer_luz();
+  esperar_oscuridad();
+  int inicio_oscuridad = millis();
+  if (esperar_luz(inicio_oscuridad, false)) {
     Serial.println();
-    Serial.println("Espacio largo");
-    Serial.println("La palabra es: [" + myword + "]");
-    Serial.print("Leyendo...");
-    myword = "";
-  } else {
-    Serial.println("Espacio corto");
+    Serial.println("La palabra es: [" + palabra + "]");
+    Serial.print("Esperando...");
+    palabra = "";
   }
 }
