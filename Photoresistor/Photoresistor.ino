@@ -1,45 +1,37 @@
 const int pin_sensor = A0;
-
-int umbral_minimo = 0;
-int umbral_maximo = 1023;
 int luz_ambiente = 0;
 int duracion_parpadeo = 100;
 int tolerancia_parpadeo = 150;
+int largo_silencio = 7;
 String punto = ".";
 String raya = "-";
 String palabra = "";
 
 void fijar_luz_ambiente() {
-  int luz_sensor = analogRead(pin_sensor);
-  luz_ambiente = map(luz_sensor, 0, 1023, 0, 255);
+  luz_ambiente = analogRead(pin_sensor);
 }
 
-bool esperar_luz(int inicio_oscuridad, boolean por_siempre) {
-  int luz_calibrada = 0;
+bool esperar_luz(int inicio_oscuridad, bool por_siempre) {
+  int luz_sensor = 0;
   do {
     int luz_sensor = analogRead(pin_sensor);
-    luz_calibrada = map(luz_sensor, 0, 1023, 0, 255);
-  } while ((luz_calibrada <= luz_ambiente + 10) && (por_siempre || (millis() - inicio_oscuridad < duracion_parpadeo * 7)));
-  return luz_calibrada <= luz_ambiente + 10; //se acabo el tiempo
+  } while ((luz_sensor <= luz_ambiente) && (por_siempre || (millis() - inicio_oscuridad < duracion_parpadeo * largo_silencio)));
+  return luz_sensor <= luz_ambiente ; //se acabo el tiempo
 }
 
 void esperar_oscuridad() {
-  int luz_calibrada = 0;
+  int luz_sensor = 0;
   do {
     int luz_sensor = analogRead(pin_sensor);
-    luz_calibrada = map(luz_sensor, 0, 1023, 0, 255);    
-  } while (luz_calibrada > luz_ambiente);
+  } while (luz_sensor > luz_ambiente);
 }
 
 void leer_luz() {
   // Serial.println("LUZ");
   int duracion_luz = 0;
-  int luz_calibrada = 0;
+  int luz_sensor = 0;
   int inicio_luz = millis();
-  do {
-    int luz_sensor = analogRead(pin_sensor);
-    luz_calibrada = map(luz_sensor, 0, 1023, 0, 255);
-  } while (luz_calibrada > luz_ambiente);
+  esperar_oscuridad();
   duracion_luz = millis() - inicio_luz;
   if (duracion_luz < duracion_parpadeo + tolerancia_parpadeo) {
     palabra = palabra + punto;
@@ -50,6 +42,7 @@ void leer_luz() {
 }
 
 void setup() {
+  pinMode(pin_sensor, INPUT);
   Serial.begin(9600);
   delay(1000);
   fijar_luz_ambiente();
