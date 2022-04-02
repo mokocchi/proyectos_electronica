@@ -1,66 +1,62 @@
 const int pin_sensor = A0;
-int luz_ambiente = 0;
-int duracion_parpadeo = 100;
-int tolerancia_parpadeo = 150;
-int largo_silencio = 7;
-String punto = ".";
-String raya = "-";
+const int largo_punto = 300;
+const int tiempo_maximo =  1000;
+const int largo_silencio = 750;
+const String punto = ".";
+const String raya = "-";
 String palabra = "";
+int luz_ambiente;
 
-void fijar_luz_ambiente() {
+void fijar_luz_ambiente(){
   luz_ambiente = analogRead(pin_sensor);
 }
 
-bool esperar_luz(int inicio_oscuridad, bool por_siempre) {
-  int luz_sensor = 0;
+void esperar_luz(bool con_tiempo) {
+  int luz_sensor;
+  int inicio = millis();
   do {
-    int luz_sensor = analogRead(pin_sensor);
-  } while ((luz_sensor <= luz_ambiente) && (por_siempre || (millis() - inicio_oscuridad < duracion_parpadeo * largo_silencio)));
-  return luz_sensor <= luz_ambiente ; //se acabo el tiempo
+    luz_sensor = analogRead(pin_sensor);
+    if(con_tiempo && (millis() > inicio + tiempo_maximo)) {
+      return;
+    }
+  } while (luz_sensor < luz_ambiente + 10);
 }
 
 void esperar_oscuridad() {
-  int luz_sensor = 0;
+  int luz_sensor;
   do {
-    int luz_sensor = analogRead(pin_sensor);
+    luz_sensor = analogRead(pin_sensor);
   } while (luz_sensor > luz_ambiente);
 }
 
-void leer_luz() {
-  // Serial.println("LUZ");
-  int duracion_luz = 0;
-  int luz_sensor = 0;
-  int inicio_luz = millis();
-  esperar_oscuridad();
-  duracion_luz = millis() - inicio_luz;
-  if (duracion_luz < duracion_parpadeo + tolerancia_parpadeo) {
-    palabra = palabra + punto;
-  } else {
-    palabra = palabra + raya;
-  }
-  Serial.print(".");
-}
-
 void setup() {
-  pinMode(pin_sensor, INPUT);
   Serial.begin(9600);
-  delay(1000);
+  pinMode(pin_sensor, INPUT);
   fijar_luz_ambiente();
-  char buffer[16];
-  sprintf(buffer, "Luz ambiente: %d", luz_ambiente);
-  Serial.println(buffer);
-  Serial.print("Esperando...");
+  Serial.print("Luz ambiente: ");
+  Serial.println(luz_ambiente);
 }
 
 void loop() {
-  esperar_luz(0, true);
-  leer_luz();
+  esperar_luz(false);  
+  const int inicio_luz = millis();
   esperar_oscuridad();
-  int inicio_oscuridad = millis();
-  if (esperar_luz(inicio_oscuridad, false)) {
+  int duracion_luz = millis() - inicio_luz;
+  if(duracion_luz > largo_punto) {
+    palabra = palabra + raya;
+  } else {
+    palabra = palabra + punto;
+  }
+  Serial.print(".");
+  const int inicio_oscuridad = millis();
+  esperar_luz(true);
+  int duracion_oscuridad = millis() - inicio_oscuridad;
+  if(duracion_oscuridad >= largo_silencio) {
     Serial.println();
-    Serial.println("La palabra es: [" + palabra + "]");
-    Serial.print("Esperando...");
-    palabra = "";
+    Serial.print("La palabra es:");
+    Serial.print("[");
+    Serial.print(palabra);
+    Serial.println("]");
+    palabra = "";    
   }
 }
